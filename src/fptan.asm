@@ -98,26 +98,26 @@ sin_pd:
 	vmovapd ymm2,[sign_mask]
 	vandnpd ymm0,ymm2,ymm0 ; make positive x
 	vandpd ymm1,ymm1,[sign_mask] ; save sign bit
-	
+
 	vbroadcastsd ymm2,[O4PI]
-	vmulpd ymm3,ymm0,ymm2 ; 
+	vmulpd ymm3,ymm0,ymm2 ;
 	vroundpd ymm3,ymm3,3 ; truncate y
 
 	vmulpd ymm2,ymm3,[OD16]
 	vroundpd ymm2,ymm2,3
-	
+
 ;	vmulpd ymm2,ymm2,[S16]
 ;	vsubpd ymm2,ymm3,ymm2
 
 	vfnmadd132pd ymm2,ymm3,[S16]
-	
+
 	vcvttpd2dq xmm2,ymm2 ; j
 
 	vpand xmm4,xmm2,[mask_1]
 	vpaddd xmm2,xmm2,xmm4 ; j += 1
 	vcvtdq2pd ymm4,xmm4
 	vaddpd ymm3,ymm3,ymm4 ; y += 1.0
-	
+
 	vpand xmm4,xmm2,[mask_4]
 	vpslld xmm4,xmm4,29 ; move mask to highest position
 if AVX2 ; just example, too lazy to repeat for other functions ;)
@@ -135,7 +135,7 @@ end if
 	vxorpd ymm1,ymm1,ymm4 ; invert sign
 
 	vpand xmm4,xmm2,[mask_3]
-	vpcmpeqd xmm4,xmm4,[mask_0] 
+	vpcmpeqd xmm4,xmm4,[mask_0]
 if AVX2
 	vpmovsxdq ymm4,xmm4
 else
@@ -143,10 +143,10 @@ else
 	vpsrldq xmm4,xmm4,8
 	vpmovsxdq xmm6,xmm4
 	vmovapd xmm4,xmm5
-	vinsertf128 ymm4,ymm4,xmm6,1 ; selection mask 
+	vinsertf128 ymm4,ymm4,xmm6,1 ; selection mask
 end if
 
-; Extended precision modular arithmetic	
+; Extended precision modular arithmetic
 ;	vmulpd ymm5,ymm3,[DP1]
 ;	vmulpd ymm6,ymm3,[DP2]
 ;	vmulpd ymm7,ymm3,[DP3]
@@ -160,12 +160,12 @@ end if
 
 	vmulpd ymm5,ymm0,ymm0 ; x^2
 
-	; first	
+	; first
 	polevl ymm5,sincof,5
 	vmulpd ymm15,ymm15,ymm5
 ;	vmulpd ymm15,ymm15,ymm0
 ;	vaddpd ymm6,ymm15,ymm0 ; y1
-	
+
 	vfmadd132pd ymm15,ymm0,ymm0
 	vmovapd ymm6,ymm15
 
@@ -196,9 +196,9 @@ cos_pd:
 	vmovapd ymm2,[sign_mask]
 	vandnpd ymm0,ymm2,ymm0 ; make positive x
 	vandpd ymm1,ymm1,[mask_0] ; positive
-	
+
 	vbroadcastsd ymm2,[O4PI]
-	vmulpd ymm3,ymm0,ymm2 ; 
+	vmulpd ymm3,ymm0,ymm2 ;
 	vroundpd ymm3,ymm3,3 ; truncate y
 
 	vmulpd ymm2,ymm3,[OD16]
@@ -211,11 +211,15 @@ cos_pd:
 	vpaddd xmm2,xmm2,xmm4 ; j += 1
 	vcvtdq2pd ymm4,xmm4
 	vaddpd ymm3,ymm3,ymm4 ; y += 1.0
-	
+
     vpand xmm2,xmm2,[mask_7]
 
 	vpand xmm4,xmm2,[mask_4]
 	vpslld xmm4,xmm4,29 ; move mask to highest position
+if AVX2 ; just example, too lazy to repeat for other functions ;)
+	vpmovzxdq ymm4,xmm4
+	vpsllq ymm4,ymm4,32
+else
 	vpmovzxdq xmm5,xmm4
 	vpsllq xmm5,xmm5,32
 	vpsrldq xmm4,xmm4,8
@@ -223,6 +227,7 @@ cos_pd:
 	vpsllq xmm6,xmm6,32
 	vmovapd xmm4,xmm5
 	vinsertf128 ymm4,ymm4,xmm6,1
+end if
 	vxorpd ymm1,ymm1,ymm4 ; invert sign
 
     vpand xmm4,xmm2,[mask_2]
@@ -237,15 +242,19 @@ cos_pd:
     vxorpd ymm1,ymm1,ymm4 ; invert sign
 
     vpand xmm4,xmm2,[mask_3]
-	vpcmpeqd xmm4,xmm4,[mask_0] 
+	vpcmpeqd xmm4,xmm4,[mask_0]
+if AVX2
+	vpmovsxdq ymm4,xmm4
+else
 	vpmovsxdq xmm5,xmm4
 	vpsrldq xmm4,xmm4,8
 	vpmovsxdq xmm6,xmm4
 	vmovapd xmm4,xmm5
-	vinsertf128 ymm4,ymm4,xmm6,1 ; selection mask 
+	vinsertf128 ymm4,ymm4,xmm6,1 ; selection mask
+end if
 
 
-; Extended precision modular arithmetic	
+; Extended precision modular arithmetic
 	vmulpd ymm5,ymm3,[DP1]
 	vmulpd ymm6,ymm3,[DP2]
 	vmulpd ymm7,ymm3,[DP3]
@@ -255,12 +264,12 @@ cos_pd:
 
 	vmulpd ymm5,ymm0,ymm0 ; x^2
 
-	; first	
+	; first
 	polevl ymm5,sincof,5
 	vmulpd ymm15,ymm15,ymm5
 	vmulpd ymm15,ymm15,ymm0
 	vaddpd ymm6,ymm15,ymm0 ; y1
-	
+
 	; second
 	polevl ymm5,coscof,5
 	vmulpd ymm15,ymm15,ymm5
@@ -277,7 +286,7 @@ cos_pd:
 	vxorpd ymm0,ymm0,ymm1
 	pop rbx
 	ret
-	
+
 ; ymm0 -> x
 sincos_pd:
 	push rbx
@@ -285,9 +294,9 @@ sincos_pd:
 	vmovapd ymm2,[sign_mask]
 	vandnpd ymm0,ymm2,ymm0 ; make positive x
 	vandpd ymm1,ymm1,[sign_mask] ; save sign bit
-	
+
 	vbroadcastsd ymm2,[O4PI]
-	vmulpd ymm3,ymm0,ymm2 ; 
+	vmulpd ymm3,ymm0,ymm2 ;
 	vroundpd ymm3,ymm3,3 ; truncate y
 
 	vmulpd ymm2,ymm3,[OD16]
@@ -300,7 +309,7 @@ sincos_pd:
 	vpaddd xmm2,xmm2,xmm4 ; j += 1
 	vcvtdq2pd ymm4,xmm4
 	vaddpd ymm3,ymm3,ymm4 ; y += 1.0
-	
+
 	vpand xmm4,xmm2,[mask_4]
 	vpslld xmm4,xmm4,29 ; move mask to highest position
 	vpmovzxdq xmm5,xmm4
@@ -313,14 +322,14 @@ sincos_pd:
 	vxorpd ymm1,ymm1,ymm4 ; invert sign
 
 	vpand xmm4,xmm2,[mask_3]
-	vpcmpeqd xmm4,xmm4,[mask_0] 
+	vpcmpeqd xmm4,xmm4,[mask_0]
 	vpmovsxdq xmm5,xmm4
 	vpsrldq xmm4,xmm4,8
 	vpmovsxdq xmm6,xmm4
 	vmovapd xmm4,xmm5
-	vinsertf128 ymm4,ymm4,xmm6,1 ; selection mask 
+	vinsertf128 ymm4,ymm4,xmm6,1 ; selection mask
 
-	; Extended precision modular arithmetic	
+	; Extended precision modular arithmetic
 	vmulpd ymm5,ymm3,[DP1]
 	vmulpd ymm6,ymm3,[DP2]
 	vmulpd ymm7,ymm3,[DP3]
@@ -330,12 +339,12 @@ sincos_pd:
 
 	vmulpd ymm5,ymm0,ymm0 ; x^2
 
-	; first	
+	; first
 	polevl ymm5,sincof,5
 	vmulpd ymm15,ymm15,ymm5
 	vmulpd ymm15,ymm15,ymm0
 	vaddpd ymm6,ymm15,ymm0 ; y1
-	
+
 	; second
 	polevl ymm5,coscof,5
 	vmulpd ymm15,ymm15,ymm5
@@ -359,7 +368,7 @@ sincos_pd:
 
 	vxorpd ymm0,ymm0,ymm1
 	vmovupd [rsi],ymm0
-	
+
 	pop rbx
 	ret
 tan_pd:
@@ -368,9 +377,9 @@ tan_pd:
 	vmovapd ymm2,[sign_mask]
 	vandnpd ymm0,ymm2,ymm0 ; make positive x
 	vandpd ymm1,ymm1,[sign_mask] ; save sign bit
-	
+
 	vbroadcastsd ymm2,[O4PI]
-	vmulpd ymm3,ymm0,ymm2 ; 
+	vmulpd ymm3,ymm0,ymm2 ;
 	vroundpd ymm3,ymm3,3 ; truncate y
 
 	vmulpd ymm2,ymm3,[OD16]
@@ -383,16 +392,16 @@ tan_pd:
 	vpaddd xmm2,xmm2,xmm4 ; j += 1
 	vcvtdq2pd ymm4,xmm4
 	vaddpd ymm3,ymm3,ymm4 ; y += 1.0
-	
+
 	vpand xmm4,xmm2,[mask_2]
-	vpcmpeqd xmm4,xmm4,[mask_0] 
+	vpcmpeqd xmm4,xmm4,[mask_0]
 	vpmovsxdq xmm5,xmm4
 	vpsrldq xmm4,xmm4,8
 	vpmovsxdq xmm6,xmm4
 	vmovapd xmm4,xmm5
 	vinsertf128 ymm4,ymm4,xmm6,1 ; selection mask 2
 
-	; Extended precision modular arithmetic	
+	; Extended precision modular arithmetic
 	vmulpd ymm5,ymm3,[DP1]
 	vmulpd ymm6,ymm3,[DP2]
 	vmulpd ymm7,ymm3,[DP3]
@@ -403,7 +412,7 @@ tan_pd:
 	vmulpd ymm5,ymm0,ymm0 ; x^2
 
 	vcmpnlepd ymm6,ymm5,[prec] ; selection mask 1
-	
+
 	;calculate polynom
 	polevl ymm5,P,2
 	vmovapd ymm13,ymm15
@@ -412,18 +421,18 @@ tan_pd:
 	vmulpd ymm13,ymm13,ymm5
 	vmulpd ymm13,ymm13,ymm0
 	vaddpd ymm13,ymm13,ymm0
-	
+
 	vandpd ymm13,ymm6,ymm13
 	vandnpd ymm0,ymm6,ymm0 ; select according to mask 1
 	vaddpd ymm0,ymm13,ymm0
-	
+
 	vmovapd ymm6,[mone]
 	vdivpd ymm7,ymm6,ymm0
-	
+
 	vandpd ymm0,ymm4,ymm0
 	vandnpd ymm7,ymm4,ymm7 ; select according to mask 2
 	vaddpd ymm0,ymm0,ymm7
-	
+
 	vxorpd ymm0,ymm0,ymm1 ; invert sign
 	pop rbx
 	ret
@@ -446,12 +455,12 @@ coscof dq \
 P dq \
 -1.30936939181383777646E4, \
  1.15351664838587416140E6, \
- -1.79565251976484877988E7 
+ -1.79565251976484877988E7
 Q dq \
  1.36812963470692954678E4, \
  -1.32089234440210967447E6,\
   2.50083801823357915839E7,\
-  -5.38695755929454629881E7 
+  -5.38695755929454629881E7
 O4PI dq 1.273239544735162
 align 32
 DP1: times 4 dq   7.85398125648498535156E-1;
