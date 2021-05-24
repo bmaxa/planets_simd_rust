@@ -1,0 +1,5 @@
+Linux only.
+You need fasm as well. cargo build --release or cargo bench
+This was suppose to be how manual simd improves performance,
+but seems that Rust vectorizes cos as well (try fold with cosine instead
+of Rust's cos)
