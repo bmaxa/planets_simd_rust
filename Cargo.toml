@@ -1,0 +1,13 @@
+[package]
+name = "planets"
+version = "1.0.0"
+authors = ["Branimir Maksimovic <branimir.maksimovic@gmail.com>"]
+build = "build.rs"
+[dependencies]
+rand = "0.4.5"
+[dev-dependencies]
+criterion = "*"
+
+[[bench]]
+name = "vsop87"
+harness = false
